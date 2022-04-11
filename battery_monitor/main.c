@@ -18,6 +18,8 @@
 // edit with LoRaWAN Node Region and OTAA settings 
 #include "config.h"
 
+#include "setup.h"
+
 // pin configuration for SX1276 radio module
 const struct lorawan_sx1276_settings sx1276_settings = {
     .spi = {
@@ -45,10 +47,19 @@ int receive_length = 0;
 uint8_t receive_buffer[242];
 uint8_t receive_port = 0;
 
-int main( void )
-{
+
+void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
+
+}
+
+int main( void ) {
+    
+    hardware_init();
+
+    setup_config();
+
 
     while (!tud_cdc_connected()) {
         tight_loop_contents();
