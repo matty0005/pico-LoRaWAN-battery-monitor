@@ -42,6 +42,8 @@ const struct lorawan_otaa_settings otaa_settings = {
     .channel_mask = LORAWAN_CHANNEL_MASK
 };
 
+
+
 // variables for receiving data
 int receive_length = 0;
 uint8_t receive_buffer[242];
@@ -55,8 +57,9 @@ void hardware_init() {
 }
 
 int main( void ) {
-    
-    hardware_init();
+    BatteryMonitConfig conf;
+
+    hardware_init(&conf);
 
     setup_config();
 
