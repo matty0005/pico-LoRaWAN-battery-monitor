@@ -1,7 +1,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <string.h>
+
 #include "setup.h"
+#include "hardware/flash.h"
+#include "hardware/sync.h"
+
+// We're going to erase and reprogram a region 512k from the start of flash.
+// Once done, we can access this at XIP_BASE + 512k.
+#define FLASH_TARGET_OFFSET (512 * 1024)
+
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 
 char get_keypress() {
@@ -127,8 +137,69 @@ void configure_app_key(BatteryMonitConfig *bmc) {
 }
 
 void restore_config_from_flash(BatteryMonitConfig *bmc) {
-    // TODO: later.
+    
+    if (flash_target_contents[0] != 0xF0) {
 
+        printf("No current configuration has been saved: %x\r\n", flash_target_contents[0]);
+        return;
+    }
+
+    bmc->region = flash_target_contents[1];
+
+    memcpy(bmc->app_eui, (flash_target_contents + 2), 16);
+    memcpy(bmc->app_key, (flash_target_contents + 18), 32);
+
+}
+
+/**
+ * Writes the config to flash in specified format
+ * 
+ * Fomrat: 
+ *  | 0xF0 | region x1 | app_eui x16 | app_key x32 |
+ * 
+ * Page size in flash = 128 bytes
+ * 
+*/
+void flash_write_config(BatteryMonitConfig *bmc) {
+
+    // Prepare data
+    uint8_t data_to_store[FLASH_PAGE_SIZE] = {0};
+
+    // Add in region bytes
+    data_to_store[0] = 0xF0;
+    data_to_store[1] = bmc->region;
+
+    // Copy over the app_eui and app_key
+    memcpy((data_to_store + 2), bmc->app_eui, 16);
+    memcpy((data_to_store + 18), bmc->app_key, 32);
+
+    // Note that a whole number of sectors must be erased at a time.
+    printf("\nErasing target region...\n\r");
+
+    // Have to disable interrrupts
+    uint32_t ints = save_and_disable_interrupts();
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+
+    //Renable
+    restore_interrupts(ints);
+
+    printf("\nSaving config to flash...\n\r");
+
+    ints = save_and_disable_interrupts();
+    flash_range_program(FLASH_TARGET_OFFSET, data_to_store, FLASH_PAGE_SIZE);
+    restore_interrupts(ints);
+
+    printf("Done. Verifying...\n\r");
+
+    bool mismatch = false;
+    for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
+        if (data_to_store[i] != flash_target_contents[i])
+            mismatch = true;
+    }
+    if (mismatch)
+        printf("Saving to flash failed!\n");
+    else
+        printf("Saved to flash successful!\n");
 }
 
 
@@ -160,13 +231,6 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [2] APP Key\r\n" \
         "Press q to quit, or enter selection:");
 
-
-        // int option = -1;
-        // scanf("%d", &option);
-
-        // printf("\r\nd: %d\n\r", option);
-
-
         char option = get_keypress();
 
 
@@ -187,12 +251,10 @@ void setup_config(BatteryMonitConfig *bmc) {
         }
     }
 
-    printf("\r\nYour settings have been saved. Please remove the config wire and restart device.\n\r");
 
     // Save config to flash
-
-    
-
+    flash_write_config(bmc); 
+    printf("\r\nYour settings have been saved. Please remove the config wire and restart device.\n\r");
     
 
 
