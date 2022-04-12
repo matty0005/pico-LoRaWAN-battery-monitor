@@ -46,7 +46,10 @@ uint8_t receive_port = 0;
 void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
-    printf("HELLO\r\n");
+    
+    while (!stdio_usb_connected()) {
+        sleep_ms(100);
+    }
 
     // Wait for usb to be connected
     // while (!tud_cdc_connected()) {
@@ -61,11 +64,14 @@ int main( void ) {
     BatteryMonitConfig conf;
     
     hardware_init();
+
     gpio_init(13);
     gpio_set_dir(13, GPIO_OUT);
     gpio_put(13, 1);
+
+
     setup_config(&conf);
-    sleep_ms(1000);
+
     gpio_put(13, 0);
     return 1;
     

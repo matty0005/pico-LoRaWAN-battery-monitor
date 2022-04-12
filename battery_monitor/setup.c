@@ -3,6 +3,42 @@
 
 #include "setup.h"
 
+
+char get_keypress() {
+    char option = getchar();
+    printf("%c",option);
+
+    // char c;
+    // do {
+    //     c = getchar();
+    // } while (c != '\r' &&  c != '\n' && c != EOF);
+
+    printf("\r\n");
+    return option;
+}
+
+void get_string(char *buff, int length) {
+
+    char c;
+    int i = 0;
+
+    do {
+        c = getchar();
+        printf("%c",c);
+        buff[i++] = c;
+
+        if (i > length) {
+            break;
+        }
+    } while (c != '\r' &&  c != '\n' && c != EOF);
+
+    buff[i] = '\0';
+
+    printf("\r\n");
+}
+
+
+
 bool is_in_config_mode() {
 
     // Check if GPIO pin is tied to ground
@@ -44,30 +80,36 @@ void configure_region(BatteryMonitConfig *bmc) {
 
     // Make sure value is between 0 and 8
     while (option < 0 || option > 8) {
+        char press =  get_keypress();
 
-        scanf("%d", &option);
+        if ((int)press < 48 || press > 57) {
+            printf("\r\nNot a valid number\r\nPlease enter a selection: ");
+            continue;
+        }
+        
+        option = (int)press - 48;
+
     }
 
     bmc->region = options[option];
 
 }
 
-void configure_string(char *property, char *store) {
+void configure_string(char *property, char *store, int buffLen) {
     
     bool isCorrect = false;
     
     while (!isCorrect) {
         printf("Please enter your %s here: ", property);
-            
-        scanf("%d", store);
+        
+        get_string(store, buffLen);
 
-        printf("\r\nYou have entered in '%s'\r\n", store);
-        printf("Is this correct ? [y/n]: ");
+        printf("\r\nYou have entered in: %s\r\nIs this correct ? [y/n]:", store);
         char option = getchar();
 
         if (option == 'Y' || option == 'y') {
             isCorrect = true;
-        }
+        } 
         
         printf("\r\n");
     }       
@@ -76,18 +118,19 @@ void configure_string(char *property, char *store) {
 
 void configure_app_eui(BatteryMonitConfig *bmc) {
 
-    configure_string("APP EUI", bmc->app_eui);    
+    configure_string("APP EUI", bmc->app_eui, 16);    
 }
 
 void configure_app_key(BatteryMonitConfig *bmc) {
 
-    configure_string("APP KEY", bmc->app_key);
+    configure_string("APP KEY", bmc->app_key, 32);
 }
 
 void restore_config_from_flash(BatteryMonitConfig *bmc) {
     // TODO: later.
 
 }
+
 
 void setup_config(BatteryMonitConfig *bmc) {
 
@@ -100,13 +143,13 @@ void setup_config(BatteryMonitConfig *bmc) {
     }
 
     // Read info like device eui etc
-    char devEui[17];
+    // char devEui[17];
 
-    lorawan_default_dev_eui(devEui);
+    // lorawan_default_dev_eui(devEui);
 
     printf("Welcome to the setup mode.\r\n");
 
-    printf("Device EUI: %s\r\n", devEui);
+    
 
     bool configure = true;
 
@@ -117,7 +160,15 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [2] APP Key\r\n" \
         "Press q to quit, or enter selection:");
 
-        char option = getchar();
+
+        // int option = -1;
+        // scanf("%d", &option);
+
+        // printf("\r\nd: %d\n\r", option);
+
+
+        char option = get_keypress();
+
 
         switch (option) {
             case '0':
@@ -130,10 +181,13 @@ void setup_config(BatteryMonitConfig *bmc) {
                 configure_app_key(bmc);
                 break;
             case 'q':
+            default:
                 configure = false;
                 break;
         }
     }
+
+    printf("\r\nYour settings have been saved. Please remove the config wire and restart device.\n\r");
 
     // Save config to flash
 
