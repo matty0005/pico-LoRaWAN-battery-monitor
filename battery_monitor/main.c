@@ -1,12 +1,10 @@
-/*
- * Copyright (c) 2021 Arm Limited and Contributors. All rights reserved.
- *
- * SPDX-License-Identifier: BSD-3-Clause
+/**
+ * A LoRaWAN based voltage measurement logger using the Raspberry Pi Pico 
+ * microcontroller and RFM95 LoRa module. 
  * 
- * This example uses OTAA to join the LoRaWAN network and then sends a
- * "hello world" uplink message periodically and prints out the
- * contents of any downlink message.
- */
+ * @author Matthew Gilpin
+ * @date 12 April 2022
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -35,9 +33,6 @@ const struct lorawan_sx1276_settings sx1276_settings = {
 };
 
 
-
-
-
 // variables for receiving data
 int receive_length = 0;
 uint8_t receive_buffer[242];
@@ -64,38 +59,30 @@ void hardware_init() {
 int main( void ) {
 
     BatteryMonitConfig conf;
+    Measurements meas;
     
     hardware_init();
 
     setup_config(&conf);
-
     measurements_init(&conf);
 
+    // OTAA settings
+    const struct lorawan_otaa_settings otaa_settings = {
+        .device_eui   = conf.device_eui,
+        .app_eui      = conf.app_eui,
+        .app_key      = conf.app_key,
+        .channel_mask = LORAWAN_CHANNEL_MASK
+    };
 
     return 1;
     
 
-    // // OTAA settings
-    // const struct lorawan_otaa_settings otaa_settings = {
-    //     .device_eui   = conf.device_eui,
-    //     .app_eui      = conf.app_eui,
-    //     .app_key      = conf.app_key,
-    //     .channel_mask = LORAWAN_CHANNEL_MASK
-    // };
-
-    
+    // uncomment next line to enable debug
+    // lorawan_debug(true);
 
 
-    // while (!tud_cdc_connected()) {
-    //     tight_loop_contents();
-    // }
-    
-    // printf("Pico LoRaWAN - Hello OTAA\n\n");
 
-    // // uncomment next line to enable debug
-    // // lorawan_debug(true);
-
-    // // initialize the LoRaWAN stack
+    // initialize the LoRaWAN stack
     // printf("Initilizating LoRaWAN ... ");
     // if (lorawan_init_otaa(&sx1276_settings, LORAWAN_REGION, &otaa_settings) < 0) {
     //     printf("failed!!!\n");

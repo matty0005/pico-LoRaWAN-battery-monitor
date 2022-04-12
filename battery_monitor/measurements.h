@@ -12,5 +12,6 @@ typedef struct {
 } Measurements;
 
 void measurements_init(BatteryMonitConfig *bmc);
+void take_measurements(BatteryMonitConfig *bmc, Measurements *meas);
 
 #endif
