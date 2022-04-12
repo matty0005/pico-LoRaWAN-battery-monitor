@@ -7,17 +7,17 @@ void measurements_init(BatteryMonitConfig *bmc) {
 
     // Work out the pins to init
     // ADC pins are from GPIO26 to GPIO39
-    for (int i = 0; i < 4; i++ {
+    for (int i = 0; i < 4; i++) {
 
         // check if bit is set
-        if (!!(bmc->adc_in_use & (1 << i)) {
+        if (!!(bmc->adcs_in_use & (1 << i))) {
 
             // 26 pin offset.
             adc_gpio_init(i + 26);
         }
     }
 
-    adc_select_input(0)
+    adc_select_input(0);
 
 }
 
@@ -28,14 +28,12 @@ void take_measurements(BatteryMonitConfig *bmc, Measurements *meas) {
     // reciever side, we'll omit this step here
     // const float conversion_factor = 3.3f / (1 << 12);
 
-    for (int i = 0; i < 4; i++ {
+    for (int i = 0; i < 4; i++) {
 
         // check if bit is set
-        if (!!(bmc->adc_in_use & (1 << i)) {
+        if (!!(bmc->adcs_in_use & (1 << i))) {
 
             adc_select_input(i);
-
-            uint16_t result = 
 
             switch (i) {
                 case 0:
