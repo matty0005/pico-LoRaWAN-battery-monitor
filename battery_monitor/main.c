@@ -34,13 +34,7 @@ const struct lorawan_sx1276_settings sx1276_settings = {
     .dio1  = 10
 };
 
-// OTAA settings
-const struct lorawan_otaa_settings otaa_settings = {
-    .device_eui   = LORAWAN_DEVICE_EUI,
-    .app_eui      = LORAWAN_APP_EUI,
-    .app_key      = LORAWAN_APP_KEY,
-    .channel_mask = LORAWAN_CHANNEL_MASK
-};
+
 
 
 
@@ -53,15 +47,24 @@ uint8_t receive_port = 0;
 void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
-
 }
+
 
 int main( void ) {
     BatteryMonitConfig conf;
 
-    hardware_init(&conf);
+    hardware_init();
+    setup_config(&conf);
+    
 
-    setup_config();
+    // OTAA settings
+    const struct lorawan_otaa_settings otaa_settings = {
+        .device_eui   = conf.device_eui,
+        .app_eui      = conf.app_eui,
+        .app_key      = conf.app_key,
+        .channel_mask = LORAWAN_CHANNEL_MASK
+    };
+
 
 
     while (!tud_cdc_connected()) {
