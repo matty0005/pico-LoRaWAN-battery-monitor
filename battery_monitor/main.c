@@ -65,14 +65,11 @@ int main( void ) {
     
     hardware_init();
 
-    gpio_init(13);
-    gpio_set_dir(13, GPIO_OUT);
-    gpio_put(13, 1);
+
 
 
     setup_config(&conf);
 
-    gpio_put(13, 0);
     return 1;
     
 

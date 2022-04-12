@@ -49,12 +49,23 @@ void get_string(char *buff, int length) {
 
 
 
+/**
+ * Checks if pin 13 (config pin) has been pulled down to enter 
+ * config mode.
+*/
 bool is_in_config_mode() {
+    
+    gpio_init(13);
 
-    // Check if GPIO pin is tied to ground
+    // Set to pull up
+    gpio_set_dir(13, GPIO_IN);
+    gpio_pull_up(13);
 
+    sleep_ms(100);
 
-    return true;
+    return true; // Remove after testing
+    return gpio_get(13);
+
 }
 
 void configure_region(BatteryMonitConfig *bmc) {
