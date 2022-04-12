@@ -86,7 +86,7 @@ void configure_app_key(BatteryMonitConfig *bmc) {
 
 void restore_config_from_flash(BatteryMonitConfig *bmc) {
     // TODO: later.
-    
+
 }
 
 void setup_config(BatteryMonitConfig *bmc) {
@@ -121,7 +121,7 @@ void setup_config(BatteryMonitConfig *bmc) {
 
         switch (option) {
             case '0':
-                configure_region(bnc);
+                configure_region(bmc);
                 break;
             case '1':
                 configure_app_eui(bmc);

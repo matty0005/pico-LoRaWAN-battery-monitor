@@ -13,10 +13,9 @@
 
 #include "pico/stdlib.h"
 #include "pico/lorawan.h"
-// #include "tusb.h"
 
-// edit with LoRaWAN Node Region and OTAA settings 
 #include "config.h"
+#include "tusb.h"
 
 #include "setup.h"
 
@@ -47,91 +46,106 @@ uint8_t receive_port = 0;
 void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
+    printf("HELLO\r\n");
+
+    // Wait for usb to be connected
+    // while (!tud_cdc_connected()) {
+    //     tight_loop_contents();
+    // }
+
 }
 
 
 int main( void ) {
+
     BatteryMonitConfig conf;
-
+    
     hardware_init();
+    gpio_init(13);
+    gpio_set_dir(13, GPIO_OUT);
+    gpio_put(13, 1);
     setup_config(&conf);
+    sleep_ms(1000);
+    gpio_put(13, 0);
+    return 1;
     
 
-    // OTAA settings
-    const struct lorawan_otaa_settings otaa_settings = {
-        .device_eui   = conf.device_eui,
-        .app_eui      = conf.app_eui,
-        .app_key      = conf.app_key,
-        .channel_mask = LORAWAN_CHANNEL_MASK
-    };
+    // // OTAA settings
+    // const struct lorawan_otaa_settings otaa_settings = {
+    //     .device_eui   = conf.device_eui,
+    //     .app_eui      = conf.app_eui,
+    //     .app_key      = conf.app_key,
+    //     .channel_mask = LORAWAN_CHANNEL_MASK
+    // };
 
-
-
-    while (!tud_cdc_connected()) {
-        tight_loop_contents();
-    }
     
-    printf("Pico LoRaWAN - Hello OTAA\n\n");
 
-    // uncomment next line to enable debug
-    // lorawan_debug(true);
 
-    // initialize the LoRaWAN stack
-    printf("Initilizating LoRaWAN ... ");
-    if (lorawan_init_otaa(&sx1276_settings, LORAWAN_REGION, &otaa_settings) < 0) {
-        printf("failed!!!\n");
-        while (1) {
-            tight_loop_contents();
-        }
-    } else {
-        printf("success!\n");
-    }
+    // while (!tud_cdc_connected()) {
+    //     tight_loop_contents();
+    // }
+    
+    // printf("Pico LoRaWAN - Hello OTAA\n\n");
 
-    // Start the join process and wait
-    printf("Joining LoRaWAN network ... ");
-    lorawan_join();
+    // // uncomment next line to enable debug
+    // // lorawan_debug(true);
 
-    while (!lorawan_is_joined()) {
-        lorawan_process();
-    }
-    printf("joined successfully!\n");
+    // // initialize the LoRaWAN stack
+    // printf("Initilizating LoRaWAN ... ");
+    // if (lorawan_init_otaa(&sx1276_settings, LORAWAN_REGION, &otaa_settings) < 0) {
+    //     printf("failed!!!\n");
+    //     while (1) {
+    //         tight_loop_contents();
+    //     }
+    // } else {
+    //     printf("success!\n");
+    // }
 
-    uint32_t last_message_time = 0;
+    // // Start the join process and wait
+    // printf("Joining LoRaWAN network ... ");
+    // lorawan_join();
 
-    // loop forever
-    while (1) {
-        // let the lorwan library process pending events
-        lorawan_process();
+    // while (!lorawan_is_joined()) {
+    //     lorawan_process();
+    // }
+    // printf("joined successfully!\n");
 
-        // get the current time and see if 5 seconds have passed
-        // since the last message was sent
-        uint32_t now = to_ms_since_boot(get_absolute_time());
+    // uint32_t last_message_time = 0;
 
-        if ((now - last_message_time) > 5000) {
-            const char* message = "hello world!";
+    // // loop forever
+    // while (1) {
+    //     // let the lorwan library process pending events
+    //     lorawan_process();
 
-            // try to send an unconfirmed uplink message
-            printf("sending unconfirmed message '%s' ... ", message);
-            if (lorawan_send_unconfirmed(message, strlen(message), 2) < 0) {
-                printf("failed!!!\n");
-            } else {
-                printf("success!\n");
-            }
+    //     // get the current time and see if 5 seconds have passed
+    //     // since the last message was sent
+    //     uint32_t now = to_ms_since_boot(get_absolute_time());
 
-            last_message_time = now;
-        }
+    //     if ((now - last_message_time) > 5000) {
+    //         const char* message = "hello world!";
 
-        // check if a downlink message was received
-        receive_length = lorawan_receive(receive_buffer, sizeof(receive_buffer), &receive_port);
-        if (receive_length > -1) {
-            printf("received a %d byte message on port %d: ", receive_length, receive_port);
+    //         // try to send an unconfirmed uplink message
+    //         printf("sending unconfirmed message '%s' ... ", message);
+    //         if (lorawan_send_unconfirmed(message, strlen(message), 2) < 0) {
+    //             printf("failed!!!\n");
+    //         } else {
+    //             printf("success!\n");
+    //         }
 
-            for (int i = 0; i < receive_length; i++) {
-                printf("%02x", receive_buffer[i]);
-            }
-            printf("\n");
-        }
-    }
+    //         last_message_time = now;
+    //     }
+
+    //     // check if a downlink message was received
+    //     receive_length = lorawan_receive(receive_buffer, sizeof(receive_buffer), &receive_port);
+    //     if (receive_length > -1) {
+    //         printf("received a %d byte message on port %d: ", receive_length, receive_port);
+
+    //         for (int i = 0; i < receive_length; i++) {
+    //             printf("%02x", receive_buffer[i]);
+    //         }
+    //         printf("\n");
+    //     }
+    // }
 
     return 0;
 }
