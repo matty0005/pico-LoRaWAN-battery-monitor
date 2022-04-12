@@ -23,7 +23,7 @@ char get_keypress() {
     //     c = getchar();
     // } while (c != '\r' &&  c != '\n' && c != EOF);
 
-    printf("\r\n");
+    printf("\n");
     return option;
 }
 
@@ -44,7 +44,7 @@ void get_string(char *buff, int length) {
 
     buff[i] = '\0';
 
-    printf("\r\n");
+    printf("\n");
 }
 
 
@@ -59,16 +59,16 @@ bool is_in_config_mode() {
 
 void configure_region(BatteryMonitConfig *bmc) {
     
-    printf("\r\nPlease select your region:\r\n" \
-    "    [0] AS923\r\n" \
-    "    [1] AU915 \r\n" \
-    "    [2] CN470\r\n" \
-    "    [3] EU433\r\n" \
-    "    [4] EU868\r\n" \
-    "    [5] KR920\r\n" \
-    "    [6] IN865\r\n" \
-    "    [7] US915\r\n" \
-    "    [8] RU864\r\n" \
+    printf("\nPlease select your region:\n" \
+    "    [0] AS923\n" \
+    "    [1] AU915 \n" \
+    "    [2] CN470\n" \
+    "    [3] EU433\n" \
+    "    [4] EU868\n" \
+    "    [5] KR920\n" \
+    "    [6] IN865\n" \
+    "    [7] US915\n" \
+    "    [8] RU864\n" \
     "Please enter a selection [0:8] :"
     );
 
@@ -93,7 +93,7 @@ void configure_region(BatteryMonitConfig *bmc) {
         char press =  get_keypress();
 
         if ((int)press < 48 || press > 57) {
-            printf("\r\nNot a valid number\r\nPlease enter a selection: ");
+            printf("\nNot a valid number\nPlease enter a selection: ");
             continue;
         }
         
@@ -114,14 +114,14 @@ void configure_string(char *property, char *store, int buffLen) {
         
         get_string(store, buffLen);
 
-        printf("\r\nYou have entered in: %s\r\nIs this correct ? [y/n]:", store);
+        printf("\nYou have entered in: %s\nIs this correct ? [y/n]:", store);
         char option = getchar();
 
         if (option == 'Y' || option == 'y') {
             isCorrect = true;
         } 
         
-        printf("\r\n");
+        printf("\n");
     }       
 
 }
@@ -140,7 +140,7 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
     
     if (flash_target_contents[0] != 0xF0) {
 
-        printf("No current configuration has been saved: %x\r\n", flash_target_contents[0]);
+        printf("No current configuration has been saved: %x\n", flash_target_contents[0]);
         return;
     }
 
@@ -174,7 +174,7 @@ void flash_write_config(BatteryMonitConfig *bmc) {
     memcpy((data_to_store + 18), bmc->app_key, 32);
 
     // Note that a whole number of sectors must be erased at a time.
-    printf("\nErasing target region...\n\r");
+    printf("\nErasing target region...\n");
 
     // Have to disable interrrupts
     uint32_t ints = save_and_disable_interrupts();
@@ -183,13 +183,13 @@ void flash_write_config(BatteryMonitConfig *bmc) {
     //Renable
     restore_interrupts(ints);
 
-    printf("\nSaving config to flash...\n\r");
+    printf("\nSaving config to flash...\n");
 
     ints = save_and_disable_interrupts();
     flash_range_program(FLASH_TARGET_OFFSET, data_to_store, FLASH_PAGE_SIZE);
     restore_interrupts(ints);
 
-    printf("Done. Verifying...\n\r");
+    printf("Done. Verifying...\n");
 
     bool mismatch = false;
     for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
@@ -218,17 +218,17 @@ void setup_config(BatteryMonitConfig *bmc) {
 
     // lorawan_default_dev_eui(devEui);
 
-    printf("Welcome to the setup mode.\r\n");
+    printf("Welcome to the setup mode.\n");
 
     
 
     bool configure = true;
 
     while (configure) {
-        printf("What would you like to configure\r\n" \
-        "    [0] Region\r\n" \
-        "    [1] APP Eui,\r\n" \
-        "    [2] APP Key\r\n" \
+        printf("What would you like to configure\n" \
+        "    [0] Region\n" \
+        "    [1] APP Eui,\n" \
+        "    [2] APP Key\n" \
         "Press q to quit, or enter selection:");
 
         char option = get_keypress();
@@ -254,7 +254,7 @@ void setup_config(BatteryMonitConfig *bmc) {
 
     // Save config to flash
     flash_write_config(bmc); 
-    printf("\r\nYour settings have been saved. Please remove the config wire and restart device.\n\r");
+    printf("\nYour settings have been saved. Please remove the config wire and restart device.\n");
     
 
 
