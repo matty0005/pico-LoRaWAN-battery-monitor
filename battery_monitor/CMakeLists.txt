@@ -5,9 +5,10 @@ if (TARGET tinyusb_device)
     add_executable(pico_lora_battery_monitor
         main.c
         setup.c
+        measurements.c
     )
 
-    target_link_libraries(pico_lora_battery_monitor pico_lorawan pico_stdlib hardware_flash hardware_sync)
+    target_link_libraries(pico_lora_battery_monitor pico_lorawan pico_stdlib hardware_flash hardware_sync hardware_adc)
 
     # enable usb output, disable uart output
     pico_enable_stdio_usb(pico_lora_battery_monitor 1)

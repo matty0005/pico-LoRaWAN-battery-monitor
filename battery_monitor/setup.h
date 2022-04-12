@@ -12,6 +12,7 @@ typedef struct {
     char app_key[32];
     char* channel_mask;
     LoRaMacRegion_t region;
+    uint8_t adcs_in_use;
 } BatteryMonitConfig;
 
 

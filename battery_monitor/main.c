@@ -18,6 +18,7 @@
 #include "tusb.h"
 
 #include "setup.h"
+#include "measurements.h"
 
 // pin configuration for SX1276 radio module
 const struct lorawan_sx1276_settings sx1276_settings = {
@@ -47,6 +48,7 @@ void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
     
+    
     while (!stdio_usb_connected()) {
         sleep_ms(100);
     }
@@ -65,10 +67,10 @@ int main( void ) {
     
     hardware_init();
 
-
-
-
     setup_config(&conf);
+
+    measurements_init(&conf);
+
 
     return 1;
     

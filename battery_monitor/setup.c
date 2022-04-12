@@ -80,7 +80,7 @@ void configure_region(BatteryMonitConfig *bmc) {
     "    [6] IN865\n" \
     "    [7] US915\n" \
     "    [8] RU864\n" \
-    "Please enter a selection [0:8] :"
+    "Please enter a selection [0:8] : "
     );
 
 
@@ -137,6 +137,27 @@ void configure_string(char *property, char *store, int buffLen) {
 
 }
 
+void configure_adc(BatteryMonitConfig *bmc) {
+
+    // Set all bits to 0.
+    bmc->adcs_in_use = 0;
+        
+    for (int i = 0; i < 4; i++) {
+        printf("Do you want to enable measurement on pin A%d [y/n]: ", i);
+
+        char option = getchar();
+
+        // Add a 1 in a bit position to enable
+        if (option == 'Y' || option == 'y') {
+            bmc->adcs_in_use |= (1 << i);
+        } 
+        
+        printf("\n");
+    }       
+
+}
+
+
 void configure_app_eui(BatteryMonitConfig *bmc) {
 
     configure_string("APP EUI", bmc->app_eui, 16);    
@@ -155,10 +176,11 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
         return;
     }
 
-    bmc->region = flash_target_contents[1];
+    bmc->adcs_in_use = flash_target_contents[1];
+    bmc->region = flash_target_contents[2];
 
-    memcpy(bmc->app_eui, (flash_target_contents + 2), 16);
-    memcpy(bmc->app_key, (flash_target_contents + 18), 32);
+    memcpy(bmc->app_eui, (flash_target_contents + 3), 16);
+    memcpy(bmc->app_key, (flash_target_contents + 19), 32);
 
 }
 
@@ -166,7 +188,7 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
  * Writes the config to flash in specified format
  * 
  * Fomrat: 
- *  | 0xF0 | region x1 | app_eui x16 | app_key x32 |
+ *  | 0xF0 | adcs_in_use x1 | region x1 | app_eui x16 | app_key x32 | 
  * 
  * Page size in flash = 128 bytes
  * 
@@ -178,11 +200,14 @@ void flash_write_config(BatteryMonitConfig *bmc) {
 
     // Add in region bytes
     data_to_store[0] = 0xF0;
-    data_to_store[1] = bmc->region;
+    data_to_store[1] = bmc->adcs_in_use;
+    data_to_store[2] = bmc->region;
 
     // Copy over the app_eui and app_key
-    memcpy((data_to_store + 2), bmc->app_eui, 16);
-    memcpy((data_to_store + 18), bmc->app_key, 32);
+    memcpy((data_to_store + 3), bmc->app_eui, 16);
+    memcpy((data_to_store + 19), bmc->app_key, 32);
+
+
 
     // Note that a whole number of sectors must be erased at a time.
     printf("\nErasing target region...\n");
@@ -240,6 +265,7 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [0] Region\n" \
         "    [1] APP Eui,\n" \
         "    [2] APP Key\n" \
+        "    [3] Pin's to measure\n"
         "Press q to quit, or enter selection:");
 
         char option = get_keypress();
@@ -254,6 +280,9 @@ void setup_config(BatteryMonitConfig *bmc) {
                 break;
             case '2':
                 configure_app_key(bmc);
+                break;
+            case '3':
+                configure_adc(bmc);
                 break;
             case 'q':
             default:
