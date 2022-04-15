@@ -88,8 +88,7 @@ int main( void ) {
     // initialize the LoRaWAN stack
     printf("Initilizating LoRaWAN ... ");
     
-    if (lorawan_init_otaa(&sx1276_settings, LORAMAC_REGION_AU915, &otaa_settings) < 0) {
-    // if (lorawan_init_otaa(&sx1276_settings, loraRegionOptions[conf.region], &otaa_settings) < 0) {
+    if (lorawan_init_otaa(&sx1276_settings, loraRegionOptions[conf.region], &otaa_settings) < 0) {
         printf("failed!!!\n");
         while (1) {
             tight_loop_contents();
