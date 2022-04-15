@@ -21,6 +21,18 @@ void measurements_init(BatteryMonitConfig *bmc) {
 
 }
 
+uint16_t avg_adc_read(int n) {
+    uint64_t value = 0;
+
+    for (int i = 0; i < n; i++) {
+        value += adc_read();
+
+        sleep_ms(5);
+    }
+    
+    return (uint16_t)(value / n);
+}
+
 void take_measurements(BatteryMonitConfig *bmc, Measurements *meas) {
 
     // Normally we'd have a conversion factor here, but since we are 
@@ -37,16 +49,16 @@ void take_measurements(BatteryMonitConfig *bmc, Measurements *meas) {
 
             switch (i) {
                 case 0:
-                    meas->a0 = adc_read();
+                    meas->a0 = avg_adc_read(5);
                     break;
                 case 1:
-                    meas->a1 = adc_read();
+                    meas->a1 = avg_adc_read(5);
                     break;
                 case 2:
-                    meas->a2 = adc_read();
+                    meas->a2 = avg_adc_read(5);
                     break;
                 case 3:
-                    meas->a3 = adc_read();
+                    meas->a3 = avg_adc_read(5);
                     break;
             }
 
@@ -54,3 +66,4 @@ void take_measurements(BatteryMonitConfig *bmc, Measurements *meas) {
         }
     }
 }
+

@@ -27,6 +27,8 @@
 #define FEATHER_DIO0 7
 #define FEATHER_DIO1 10
 
+#define BUFFER_SIZE 8
+
 
 extern LoRaMacRegion_t loraRegionOptions[];
 
@@ -62,17 +64,44 @@ void hardware_init() {
 
 }
 
+void make_lora_payload(BatteryMonitConfig *bmc, uint8_t *data) {
+    
+    Measurements meas = {
+        .a0 = 0,
+        .a1 = 0,
+        .a2 = 0,
+        .a3 = 0,
+    };
+
+    take_measurements(bmc, &meas);
+
+    data[0] = meas.a0 >> 8;
+    data[1] = meas.a0 & 0xFF;
+
+    data[2] = meas.a1 >> 8;
+    data[3] = meas.a1 & 0xFF;
+
+    data[4] = meas.a2 >> 8;
+    data[5] = meas.a2 & 0xFF;
+
+    data[6] = meas.a3 >> 8;
+    data[7] = meas.a3 & 0xFF;    
+
+    printf("data: %x %x | %x %x | %x %x | %x %x \n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+   
+}
+
 
 int main( void ) {
 
     BatteryMonitConfig conf;
-    Measurements meas;
     
     hardware_init();
 
     setup_config(&conf);
     measurements_init(&conf);
 
+    uint8_t payload[8];
     
     const struct lorawan_otaa_settings otaa_settings = {
         .device_eui   = conf.device_eui,
@@ -80,7 +109,6 @@ int main( void ) {
         .app_key      = conf.app_key,
         .channel_mask = LORAWAN_CHANNEL_MASK
     };
-
 
     // uncomment next line to enable debug
     lorawan_debug(true);
@@ -119,10 +147,12 @@ int main( void ) {
 
         if ((now - last_message_time) > 5000) {
             const char* message = "hello world!";
+            make_lora_payload(&conf, payload);
+
 
             // try to send an unconfirmed uplink message
             printf("sending unconfirmed message '%s' ... ", message);
-            if (lorawan_send_unconfirmed(message, strlen(message), 2) < 0) {
+            if (lorawan_send_unconfirmed(payload, 8, 2) < 0) {
                 printf("failed!!!\n");
             } else {
                 printf("success!\n");
@@ -131,16 +161,6 @@ int main( void ) {
             last_message_time = now;
         }
 
-        // check if a downlink message was received
-        receive_length = lorawan_receive(receive_buffer, sizeof(receive_buffer), &receive_port);
-        if (receive_length > -1) {
-            printf("received a %d byte message on port %d: ", receive_length, receive_port);
-
-            for (int i = 0; i < receive_length; i++) {
-                printf("%02x", receive_buffer[i]);
-            }
-            printf("\n");
-        }
     }
 
     return 0;
