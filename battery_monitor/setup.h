@@ -7,7 +7,7 @@
 
 
 typedef struct {
-    char* device_eui;
+    char device_eui[16];
     char app_eui[16];
     char app_key[32];
     char* channel_mask;

@@ -13,6 +13,18 @@
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
+LoRaMacRegion_t loraRegionOptions[] = {
+    LORAMAC_REGION_AS923,
+    LORAMAC_REGION_AU915,
+    LORAMAC_REGION_CN470,
+    LORAMAC_REGION_CN779,
+    LORAMAC_REGION_EU433,
+    LORAMAC_REGION_EU868,
+    LORAMAC_REGION_KR920,
+    LORAMAC_REGION_IN865,
+    LORAMAC_REGION_US915,
+    LORAMAC_REGION_RU864,
+};
 
 char get_keypress() {
     char option = getchar();
@@ -42,7 +54,7 @@ void get_string(char *buff, int length) {
         }
     } while (c != '\r' &&  c != '\n' && c != EOF);
 
-    buff[i] = '\0';
+    // buff[i] = '\0';
 
     printf("\n");
 }
@@ -84,19 +96,6 @@ void configure_region(BatteryMonitConfig *bmc) {
     );
 
 
-    LoRaMacRegion_t options[] = {
-        LORAMAC_REGION_AS923,
-        LORAMAC_REGION_AU915,
-        LORAMAC_REGION_CN470,
-        LORAMAC_REGION_CN779,
-        LORAMAC_REGION_EU433,
-        LORAMAC_REGION_EU868,
-        LORAMAC_REGION_KR920,
-        LORAMAC_REGION_IN865,
-        LORAMAC_REGION_US915,
-        LORAMAC_REGION_RU864,
-    };
-
     int option = -1;
 
     // Make sure value is between 0 and 8
@@ -112,7 +111,7 @@ void configure_region(BatteryMonitConfig *bmc) {
 
     }
 
-    bmc->region = options[option];
+    bmc->region = loraRegionOptions[option];
 
 }
 
@@ -125,7 +124,7 @@ void configure_string(char *property, char *store, int buffLen) {
         
         get_string(store, buffLen);
 
-        printf("\nYou have entered in: %s\nIs this correct ? [y/n]:", store);
+        printf("\nYou have entered in: %.*s\nIs this correct ? [y/n]:", buffLen, store);
         char option = getchar();
 
         if (option == 'Y' || option == 'y') {
@@ -182,6 +181,9 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
     memcpy(bmc->app_eui, (flash_target_contents + 3), 16);
     memcpy(bmc->app_key, (flash_target_contents + 19), 32);
 
+    printf("Saved app eui: %.16s\n", bmc->app_eui);
+    printf("Saved app key: %.32s\n",bmc->app_key);
+    printf("Saved region: %d\n",bmc->region);
 }
 
 /**
@@ -249,14 +251,16 @@ void setup_config(BatteryMonitConfig *bmc) {
         return;
     }
 
-    // Read info like device eui etc
-    // char devEui[17];
-
-    // lorawan_default_dev_eui(devEui);
-
     printf("Welcome to the setup mode.\n");
 
-    
+
+    // Read info like device eui etc
+    char devEui[16];
+    lorawan_default_dev_eui(devEui);
+    printf("Device EUI: %s\n", devEui);
+
+    // copy dev_eui to struct
+    memcpy(bmc->device_eui, devEui, 16);
 
     bool configure = true;
 
