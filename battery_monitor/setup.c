@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <string.h>
 
@@ -167,6 +168,16 @@ void configure_app_key(BatteryMonitConfig *bmc) {
     configure_string("APP KEY", bmc->app_key, 32);
 }
 
+void configure_frequency(BatteryMonitConfig *bmc) {
+    char period[4];
+
+    configure_string("measurement period", period, 4);
+
+    char *end;
+    // Convert string to uint16_t
+    bmc->measure_period = strtol(period, &end, 10);
+}
+
 void restore_config_from_flash(BatteryMonitConfig *bmc) {
     
     if (flash_target_contents[0] != 0xF0) {
@@ -176,21 +187,24 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
     }
 
     bmc->adcs_in_use = flash_target_contents[1];
-    bmc->region = flash_target_contents[2];
+    bmc->measure_period = (flash_target_contents[2] << 8) || flash_target_contents[3];
+    bmc->region = flash_target_contents[4];
 
-    memcpy(bmc->app_eui, (flash_target_contents + 3), 16);
-    memcpy(bmc->app_key, (flash_target_contents + 19), 32);
+
+    memcpy(bmc->app_eui, (flash_target_contents + 5), 16);
+    memcpy(bmc->app_key, (flash_target_contents + 23), 32);
 
     printf("Saved app eui: %.16s\n", bmc->app_eui);
     printf("Saved app key: %.32s\n",bmc->app_key);
     printf("Saved region: %d\n",bmc->region);
+    printf("Saved measurement period: %d\n",bmc->measure_period);
 }
 
 /**
  * Writes the config to flash in specified format
  * 
  * Fomrat: 
- *  | 0xF0 | adcs_in_use x1 | region x1 | app_eui x16 | app_key x32 | 
+ *  | 0xF0 | adcs_in_use x1 | measure_period x2 | region x1 | app_eui x16 | app_key x32 | 
  * 
  * Page size in flash = 128 bytes
  * 
@@ -203,11 +217,13 @@ void flash_write_config(BatteryMonitConfig *bmc) {
     // Add in region bytes
     data_to_store[0] = 0xF0;
     data_to_store[1] = bmc->adcs_in_use;
-    data_to_store[2] = bmc->region;
+    data_to_store[2] = (bmc->measure_period >> 8) & 0xFF;
+    data_to_store[3] = bmc->measure_period & 0xFF;
+    data_to_store[4] = bmc->region;
 
     // Copy over the app_eui and app_key
-    memcpy((data_to_store + 3), bmc->app_eui, 16);
-    memcpy((data_to_store + 19), bmc->app_key, 32);
+    memcpy((data_to_store + 5), bmc->app_eui, 16);
+    memcpy((data_to_store + 23), bmc->app_key, 32);
 
 
 
@@ -270,6 +286,7 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [1] APP Eui,\n" \
         "    [2] APP Key\n" \
         "    [3] Pin's to measure\n"
+        "    [4] Frequency of measurement\n"
         "Press q to quit, or enter selection:");
 
         char option = get_keypress();
@@ -287,6 +304,9 @@ void setup_config(BatteryMonitConfig *bmc) {
                 break;
             case '3':
                 configure_adc(bmc);
+                break;
+            case '4':
+                configure_frequency(bmc);
                 break;
             case 'q':
             default:

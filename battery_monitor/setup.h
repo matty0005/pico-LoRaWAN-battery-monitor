@@ -13,6 +13,7 @@ typedef struct {
     char* channel_mask;
     LoRaMacRegion_t region;
     uint8_t adcs_in_use;
+    uint16_t measure_period;
 } BatteryMonitConfig;
 
 

@@ -1,5 +1,14 @@
 #include "rv-3028.h"
 
+#define STATUS_REG 0x0E
+#define CONTROL_1_REG 0x0F
+#define CONTROL_2_REG 0x10
+#define TIMER_VALUE_0_REG 0x0A
+#define TIMER_VALUE_1_REG 0x0B
+
+void set_periodic_interrupt(uint16_t period);
+
+
 uint8_t decimal_to_bcd(uint8_t value) {
     return ((value / 10) * 0x10) + (value % 10);
 
@@ -16,6 +25,7 @@ void rv3028_write(uint8_t reg, uint value) {
 uint8_t rv3029_read(uint8_t reg) {
 
 }
+
 
 void rv3028_init() {
     // Use SCL = GPIO3
@@ -37,15 +47,60 @@ void rv3028_init() {
     // Set to 24h time
     set_24h_time();
 
+    // Set default time of 2h
+    set_periodic_interrupt(120);
+
 }
 
+void clear_bits(uint8_t reg, uint8_t bitmask) {
+    uint8_t current_value = rv3029_read(reg);
+
+    current_value &= ~bitmask;
+
+    rv3028_write(reg, current_value);
+}
+
+void set_bits(uint8_t reg, uint8_t bitmask) {
+    uint8_t current_value = rv3029_read(reg);
+
+    current_value &= ~bitmask;
+    current_value |= bitmask;
+
+    rv3028_write(reg, current_value);
+    
+}
+
+void set_periodic_interrupt(uint16_t period) {
+
+    // Clear TE
+    clear_bits(CONTROL_1_REG, ((1 << 2) | 0x03));
+
+    //Clear TIE
+    clear_bits(CONTROL_2_REG, (1 << 4));
+
+    //Clear TF
+    clear_bits(STATUS_REG, (1 << 3));
+
+    // Set TRPT bit to reload interrupt and set timer clock
+    set_bits(CONTROL_1_REG, ((1 << 7) | 0x03));
+
+    // Work out period
+    // Timer Value 0 is low reg.
+    set_bits(TIMER_VALUE_0_REG, period & 0xFF);
+    set_bits(TIMER_VALUE_0_REG, (period >> 8) & 0xFF);
+
+    // Enable hardware interrupt pin.
+    set_bits(CONTROL_2_REG, (1 << 4));
+
+    // Enable countdown timer.
+    set_bits(CONTROL_1_REG, (1 << 2));
+
+}
+
+
 void set_24h_time() {
-    uint8_t control_2_reg = rv3029_read(0x10);
-
-    // 12_24 bit in bit 1.
-    control_2_reg &= ~(1 << 1);
-
-    rv3028_write(0x10, control_2_reg);
+    
+    clear_bits(0x10, (1 << 1))
 }
 
 void set_switchover() {

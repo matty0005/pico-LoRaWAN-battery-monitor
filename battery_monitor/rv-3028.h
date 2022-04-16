@@ -18,5 +18,6 @@ uint8_t get_hours();
 uint8_t get_date();
 uint8_t get_month();
 uint16_t get_year();
+void set_periodic_interrupt(uint16_t period);
 
 #endif
