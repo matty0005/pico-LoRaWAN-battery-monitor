@@ -8,7 +8,7 @@ if (TARGET tinyusb_device)
         measurements.c
     )
 
-    target_link_libraries(pico_lora_battery_monitor pico_lorawan pico_stdlib hardware_flash hardware_sync hardware_adc)
+    target_link_libraries(pico_lora_battery_monitor pico_lorawan pico_stdlib hardware_flash hardware_sync hardware_adc hardware_i2c)
 
     # enable usb output, disable uart output
     pico_enable_stdio_usb(pico_lora_battery_monitor 1)
