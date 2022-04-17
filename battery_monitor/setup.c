@@ -8,6 +8,8 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 
+#include "rv-3028.h"
+
 // We're going to erase and reprogram a region 512k from the start of flash.
 // Once done, we can access this at XIP_BASE + 512k.
 #define FLASH_TARGET_OFFSET (512 * 1024)
@@ -121,7 +123,7 @@ void configure_string(char *property, char *store, int buffLen) {
     bool isCorrect = false;
     
     while (!isCorrect) {
-        printf("Please enter your %s here: ", property);
+        printf("%s:", property);
         
         get_string(store, buffLen);
 
@@ -160,22 +162,47 @@ void configure_adc(BatteryMonitConfig *bmc) {
 
 void configure_app_eui(BatteryMonitConfig *bmc) {
 
-    configure_string("APP EUI", bmc->app_eui, 16);    
+    configure_string("Please enter your APP EUI here", bmc->app_eui, 16);    
 }
 
 void configure_app_key(BatteryMonitConfig *bmc) {
 
-    configure_string("APP KEY", bmc->app_key, 32);
+    configure_string("Please enter your APP KEY here", bmc->app_key, 32);
 }
 
 void configure_frequency(BatteryMonitConfig *bmc) {
     char period[4];
 
-    configure_string("measurement period", period, 4);
+    configure_string("Please enter your measurment period", period, 4);
 
     char *end;
     // Convert string to uint16_t
     bmc->measure_period = strtol(period, &end, 10);
+    printf("Setting time to be %d mins\n", bmc->measure_period);
+
+    set_periodic_interrupt(bmc->measure_period);
+}
+
+void configure_datetime() {
+    char year[4], month[2], day[2], hour[2], mins[2];
+
+    configure_string("The curent year is", year, 4);
+    configure_string("The curent month is (1-12)", month, 2);
+    configure_string("The curent date is (1-31)", day, 2);
+    configure_string("The curent hour is (0-23)", hour, 2);
+    configure_string("The curent minute is (0-59)", mins, 2);
+
+    char *end;
+    // Convert string to uint16_t
+    uint16_t yearVal = strtol(year, &end, 10);
+    uint8_t monthVal = strtol(month, &end, 10);
+    uint8_t dayVal = strtol(day, &end, 10);
+    uint8_t hourVal = strtol(hour, &end, 10);
+    uint8_t minsVal = strtol(mins, &end, 10);
+
+    set_time(minsVal, hourVal, dayVal, monthVal, yearVal);
+    printf("The time has been set\n");
+
 }
 
 void restore_config_from_flash(BatteryMonitConfig *bmc) {
@@ -285,8 +312,9 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [0] Region\n" \
         "    [1] APP Eui,\n" \
         "    [2] APP Key\n" \
-        "    [3] Pin's to measure\n"
-        "    [4] Frequency of measurement\n"
+        "    [3] Pin's to measure\n" \
+        "    [4] Frequency of measurement\n" \
+        "    [5] Set date and time\n" \
         "Press q to quit, or enter selection:");
 
         char option = get_keypress();
@@ -307,6 +335,12 @@ void setup_config(BatteryMonitConfig *bmc) {
                 break;
             case '4':
                 configure_frequency(bmc);
+                break;
+            case '5':
+                configure_datetime();
+                break;
+            case 'c':
+                rv3028_clear_interrupts();
                 break;
             case 'q':
             default:

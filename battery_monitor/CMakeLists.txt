@@ -6,6 +6,7 @@ if (TARGET tinyusb_device)
         main.c
         setup.c
         measurements.c
+        rv-3028.c
     )
 
     target_link_libraries(pico_lora_battery_monitor pico_lorawan pico_stdlib hardware_flash hardware_sync hardware_adc hardware_i2c)

@@ -17,6 +17,7 @@
 
 #include "setup.h"
 #include "measurements.h"
+#include "rv-3028.h"
 
 #define FEATHER_SPI_SCK 18
 #define FEATHER_SPI_MOSI 19
@@ -56,7 +57,8 @@ uint8_t receive_port = 0;
 void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
-    
+
+    rv3028_init();    
     
     while (!stdio_usb_connected()) {
         sleep_ms(100);

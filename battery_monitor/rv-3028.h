@@ -3,6 +3,7 @@
 
 #include "hardware/i2c.h"
 #include <stdbool.h>
+#include "pico/stdlib.h"
 
 #define SDA_PIN 2
 #define SCL_PIN 3
@@ -19,5 +20,6 @@ uint8_t get_date();
 uint8_t get_month();
 uint16_t get_year();
 void set_periodic_interrupt(uint16_t period);
+void rv3028_clear_interrupts();
 
 #endif

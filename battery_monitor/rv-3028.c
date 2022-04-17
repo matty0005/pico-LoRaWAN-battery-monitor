@@ -6,6 +6,8 @@
 #define TIMER_VALUE_0_REG 0x0A
 #define TIMER_VALUE_1_REG 0x0B
 
+#define I2C_ADDRESS 0x52
+
 void set_periodic_interrupt(uint16_t period);
 
 
@@ -18,11 +20,22 @@ uint8_t bcd_to_decimal(uint8_t value) {
     return ((value / 0x10) * 10) + (value % 0x10);
 }
 
-void rv3028_write(uint8_t reg, uint value) {
+void rv3028_write(uint8_t reg, uint8_t value) {
 
+    uint8_t buff[2] = { reg, value };
+
+    // Wait 100ms
+    i2c_write_timeout_us(I2C_CHANNEL, I2C_ADDRESS, buff, 2, true, 1000 * 100);
 }
 
-uint8_t rv3029_read(uint8_t reg) {
+uint8_t rv3028_read(uint8_t reg) {
+
+    i2c_write_timeout_us(I2C_CHANNEL, I2C_ADDRESS, &reg, 1, true, 1000 * 100);
+
+    char buff[1];
+    i2c_read_timeout_us(I2C_CHANNEL, I2C_ADDRESS, buff, 1, true, 1000 * 100);
+
+    return buff[0];
 
 }
 
@@ -53,7 +66,7 @@ void rv3028_init() {
 }
 
 void clear_bits(uint8_t reg, uint8_t bitmask) {
-    uint8_t current_value = rv3029_read(reg);
+    uint8_t current_value = rv3028_read(reg);
 
     current_value &= ~bitmask;
 
@@ -61,7 +74,7 @@ void clear_bits(uint8_t reg, uint8_t bitmask) {
 }
 
 void set_bits(uint8_t reg, uint8_t bitmask) {
-    uint8_t current_value = rv3029_read(reg);
+    uint8_t current_value = rv3028_read(reg);
 
     current_value &= ~bitmask;
     current_value |= bitmask;
@@ -79,15 +92,19 @@ void set_periodic_interrupt(uint16_t period) {
     clear_bits(CONTROL_2_REG, (1 << 4));
 
     //Clear TF
-    clear_bits(STATUS_REG, (1 << 3));
+    rv3028_clear_interrupts();
 
-    // Set TRPT bit to reload interrupt and set timer clock
+    // Set TRPT bit to reload interrupt and set timer clock to 1/60hz
     set_bits(CONTROL_1_REG, ((1 << 7) | 0x03));
 
     // Work out period
     // Timer Value 0 is low reg.
+    // Clear bits first
+    clear_bits(TIMER_VALUE_0_REG, 0xFF);
+    clear_bits(TIMER_VALUE_0_REG, 0xFF);
+
     set_bits(TIMER_VALUE_0_REG, period & 0xFF);
-    set_bits(TIMER_VALUE_0_REG, (period >> 8) & 0xFF);
+    set_bits(TIMER_VALUE_1_REG, (period >> 8) & 0xFF);
 
     // Enable hardware interrupt pin.
     set_bits(CONTROL_2_REG, (1 << 4));
@@ -97,15 +114,20 @@ void set_periodic_interrupt(uint16_t period) {
 
 }
 
+void rv3028_clear_interrupts() {
+    //Clear TF
+    clear_bits(STATUS_REG, (1 << 3));
+}
+
 
 void set_24h_time() {
     
-    clear_bits(0x10, (1 << 1))
+    clear_bits(0x10, (1 << 1));
 }
 
 void set_switchover() {
     // Set switchover mode to switch when Vd < Vbackup
-    uint8_t eeprom_backup_reg = rv3029_read(0x37);
+    uint8_t eeprom_backup_reg = rv3028_read(0x37);
 
     eeprom_backup_reg &= ~(0x03 << 2);
     eeprom_backup_reg |= (0x01 << 2);
@@ -118,7 +140,7 @@ void set_tickle_charge(bool enabled) {
     // EEPROM backup 37h -> TCE = 1
     // Use default 3k resistor
     
-    uint8_t eeprom_backup_reg = rv3029_read(0x37);
+    uint8_t eeprom_backup_reg = rv3028_read(0x37);
 
     // TCE is bit 5, and reset TCR to 0.
     eeprom_backup_reg &= ~((1 << 5) | 0x03);
@@ -151,18 +173,18 @@ void set_time(uint8_t min, uint8_t hour, uint8_t date, uint8_t month, uint16_t y
 }
 
 uint8_t get_mins() {
-    return bcd_to_decimal(rv3029_read(0x01));
+    return bcd_to_decimal(rv3028_read(0x01));
 }
 
 uint8_t get_hours() {
-    return bcd_to_decimal(rv3029_read(0x02));
+    return bcd_to_decimal(rv3028_read(0x02));
 }
 uint8_t get_date() {
-    return bcd_to_decimal(rv3029_read(0x04));
+    return bcd_to_decimal(rv3028_read(0x04));
 }
 uint8_t get_month() {
-    return bcd_to_decimal(rv3029_read(0x05));
+    return bcd_to_decimal(rv3028_read(0x05));
 }
-uint8_t get_year() {
-    return bcd_to_decimal(rv3029_read(0x06)) + 2000;
+uint16_t get_year() {
+    return bcd_to_decimal(rv3028_read(0x06)) + 2000;
 }
