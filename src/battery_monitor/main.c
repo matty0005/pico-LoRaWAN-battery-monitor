@@ -135,8 +135,12 @@ int main( void ) {
         .channel_mask = LORAWAN_CHANNEL_MASK
     };
 
+    #ifdef DEBUG_MODE
+
     // uncomment next line to enable debug
     lorawan_debug(true);
+    
+    #endif
 
     // initialize the LoRaWAN stack
     printf("Initilizating LoRaWAN ... ");
@@ -195,7 +199,7 @@ int main( void ) {
     // let the lorwan library process pending events
     lorawan_process();
 
-        // Record measuremnts and make payload
+    // Record measuremnts and make payload
     make_lora_payload(&conf, payload);
 
     // try to send an unconfirmed uplink message
