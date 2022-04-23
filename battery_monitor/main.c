@@ -28,7 +28,12 @@
 #define FEATHER_DIO0 7
 #define FEATHER_DIO1 10
 
+#define LATCH_PIN 13
+
 #define BUFFER_SIZE 8
+#define RETRY_COUNT 5
+
+
 
 
 extern LoRaMacRegion_t loraRegionOptions[];
@@ -53,6 +58,21 @@ int receive_length = 0;
 uint8_t receive_buffer[242];
 uint8_t receive_port = 0;
 
+void latch_power() {
+    gpio_init(LATCH_PIN);
+
+    // Set to pull up
+    gpio_set_dir(LATCH_PIN, GPIO_OUT);
+    
+    // Keep power on until we turn it off
+    gpio_put(LATCH_PIN, true);
+}
+
+void unlatch_power() {
+    
+    // Disconnect power
+    gpio_put(LATCH_PIN, false);
+}
 
 void hardware_init() {
     // initialize stdio and wait for USB CDC connect
@@ -96,6 +116,9 @@ void make_lora_payload(BatteryMonitConfig *bmc, uint8_t *data) {
 
 int main( void ) {
 
+    // first thing we need to do is set power to on.
+    latch_power();
+
     BatteryMonitConfig conf;
     
     hardware_init();
@@ -138,8 +161,12 @@ int main( void ) {
 
     uint32_t last_message_time = 0;
 
+    #ifdef DEBUG_MODE
+
     // loop forever
     while (1) {
+        
+
         // let the lorwan library process pending events
         lorawan_process();
 
@@ -148,12 +175,11 @@ int main( void ) {
         uint32_t now = to_ms_since_boot(get_absolute_time());
 
         if ((now - last_message_time) > 5000) {
-            const char* message = "hello world!";
+
+            // Record measuremnts and make payload
             make_lora_payload(&conf, payload);
 
-
             // try to send an unconfirmed uplink message
-            printf("sending unconfirmed message '%s' ... ", message);
             if (lorawan_send_unconfirmed(payload, 8, 2) < 0) {
                 printf("failed!!!\n");
             } else {
@@ -162,8 +188,30 @@ int main( void ) {
 
             last_message_time = now;
         }
-
     }
+
+    #else
+
+    // let the lorwan library process pending events
+    lorawan_process();
+
+        // Record measuremnts and make payload
+    make_lora_payload(&conf, payload);
+
+    // try to send an unconfirmed uplink message
+    for (int i = 0; i < RETRY_COUNT && lorawan_send_unconfirmed(payload, 8, 2) < 0; i++) {
+
+        printf("Failed to send: %d\n", i);
+        sleep_ms(100);
+        lorawan_process();
+    }
+
+    // Turn off device to conserve power
+    unlatch_power();
+
+
+    #endif
+
 
     return 0;
 }

@@ -14,6 +14,8 @@
 // Once done, we can access this at XIP_BASE + 512k.
 #define FLASH_TARGET_OFFSET (512 * 1024)
 
+#define CONFIG_PIN 11
+
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 LoRaMacRegion_t loraRegionOptions[] = {
@@ -65,21 +67,21 @@ void get_string(char *buff, int length) {
 
 
 /**
- * Checks if pin 13 (config pin) has been pulled down to enter 
+ * Checks if pin CONFIG_PIN (config pin) has been pulled down to enter 
  * config mode.
 */
 bool is_in_config_mode() {
     
-    gpio_init(13);
+    gpio_init(CONFIG_PIN);
 
     // Set to pull up
-    gpio_set_dir(13, GPIO_IN);
-    gpio_pull_up(13);
+    gpio_set_dir(CONFIG_PIN, GPIO_IN);
+    gpio_pull_up(CONFIG_PIN);
 
     sleep_ms(100);
 
     return true; // Remove after testing
-    return gpio_get(13);
+    return gpio_get(CONFIG_PIN);
 
 }
 
