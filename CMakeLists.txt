@@ -122,4 +122,4 @@ target_include_directories(pico_lorawan INTERFACE
 
 target_link_libraries(pico_lorawan INTERFACE pico_loramac_node)
 
-add_subdirectory("battery_monitor")
+add_subdirectory("src/battery_monitor")
