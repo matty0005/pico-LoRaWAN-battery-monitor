@@ -289,7 +289,9 @@ void setup_config(BatteryMonitConfig *bmc) {
 
     // Bring settings out of flash if any
     restore_config_from_flash(bmc);
-    
+
+    set_periodic_interrupt(bmc->measure_period);
+
     // Check if in setup mode
     if (!is_in_config_mode()) {
         return;
