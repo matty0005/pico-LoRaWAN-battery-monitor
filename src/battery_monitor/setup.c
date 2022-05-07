@@ -80,8 +80,7 @@ bool is_in_config_mode() {
 
     sleep_ms(100);
 
-    return true; // Remove after testing
-    return gpio_get(CONFIG_PIN);
+    return !gpio_get(CONFIG_PIN);
 
 }
 
