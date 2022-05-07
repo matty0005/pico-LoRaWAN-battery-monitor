@@ -78,9 +78,15 @@ void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
 
-    rv3028_init();    
+    rv3028_init();  
+
     
-    while (!stdio_usb_connected()) {
+    for (uint8_t i = 0; i < 5; i++) {
+
+        if (stdio_usb_connected()) {
+            break;
+        }
+
         sleep_ms(100);
     }
 
