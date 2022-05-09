@@ -9,7 +9,7 @@
 #define SCL_PIN 3
 #define I2C_CHANNEL i2c1
 
-void rv3028_init();
+void rv3028_init(uint16_t interval);
 void set_switchover();
 void set_tickle_charge(bool enabled);
 void set_24h_time();

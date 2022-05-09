@@ -174,6 +174,8 @@ void configure_app_key(BatteryMonitConfig *bmc) {
 void configure_frequency(BatteryMonitConfig *bmc) {
     char period[4];
 
+    printf("Current period: %d mins\n", bmc->measure_period);
+
     configure_string("Please enter your measurment period", period, 4);
 
     char *end;
@@ -215,7 +217,7 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
     }
 
     bmc->adcs_in_use = flash_target_contents[1];
-    bmc->measure_period = (flash_target_contents[2] << 8) || flash_target_contents[3];
+    bmc->measure_period = (flash_target_contents[2] << 8) | flash_target_contents[3];
     bmc->region = flash_target_contents[4];
 
 
@@ -253,8 +255,6 @@ void flash_write_config(BatteryMonitConfig *bmc) {
     memcpy((data_to_store + 5), bmc->app_eui, 16);
     memcpy((data_to_store + 23), bmc->app_key, 32);
 
-
-
     // Note that a whole number of sectors must be erased at a time.
     printf("\nErasing target region...\n");
 
@@ -290,7 +290,7 @@ void setup_config(BatteryMonitConfig *bmc) {
     // Bring settings out of flash if any
     restore_config_from_flash(bmc);
 
-    set_periodic_interrupt(bmc->measure_period);
+    rv3028_init(bmc->measure_period); 
 
     // Check if in setup mode
     if (!is_in_config_mode()) {
@@ -298,7 +298,7 @@ void setup_config(BatteryMonitConfig *bmc) {
     }
 
     printf("Welcome to the setup mode.\n");
-
+    printf("Interval set to %d mins.\n", bmc->measure_period);
 
     // Read info like device eui etc
     char devEui[16];
@@ -337,6 +337,7 @@ void setup_config(BatteryMonitConfig *bmc) {
                 configure_adc(bmc);
                 break;
             case '4':
+                rv3028_init(bmc->measure_period); 
                 configure_frequency(bmc);
                 break;
             case '5':

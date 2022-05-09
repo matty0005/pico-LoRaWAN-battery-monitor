@@ -69,7 +69,11 @@ void latch_power() {
 }
 
 void unlatch_power() {
-    
+    gpio_init(LATCH_PIN);
+
+    // Set to pull up
+    gpio_set_dir(LATCH_PIN, GPIO_OUT);
+
     // Disconnect power
     gpio_put(LATCH_PIN, false);
 }
@@ -78,9 +82,6 @@ void hardware_init() {
     // initialize stdio and wait for USB CDC connect
     stdio_init_all();
 
-    rv3028_init();  
-
-    
     for (uint8_t i = 0; i < 5; i++) {
 
         if (stdio_usb_connected()) {
@@ -123,13 +124,14 @@ void make_lora_payload(BatteryMonitConfig *bmc, uint8_t *data) {
 int main( void ) {
 
     // first thing we need to do is set power to on.
-    latch_power();
+    // latch_power();
 
     BatteryMonitConfig conf;
     
     hardware_init();
 
     setup_config(&conf);
+
     measurements_init(&conf);
 
     uint8_t payload[8];
@@ -216,9 +218,14 @@ int main( void ) {
         lorawan_process();
     }
 
+    lorawan_process_timeout_ms(30000);
+
     // Turn off device to conserve power
     unlatch_power();
 
+    while (1) {
+        tight_loop_contents();
+    }
 
     #endif
 

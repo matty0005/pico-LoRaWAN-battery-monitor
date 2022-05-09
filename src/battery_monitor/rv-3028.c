@@ -40,7 +40,7 @@ uint8_t rv3028_read(uint8_t reg) {
 }
 
 
-void rv3028_init() {
+void rv3028_init(uint16_t interval) {
     // Use SCL = GPIO3
     // Use SDA = GPIO2
 
@@ -60,8 +60,8 @@ void rv3028_init() {
     // Set to 24h time
     set_24h_time();
 
-    // Set default time of 2h
-    set_periodic_interrupt(120);
+    // Set interval time
+    set_periodic_interrupt(interval);
 
 }
 
@@ -95,7 +95,7 @@ void set_periodic_interrupt(uint16_t period) {
     rv3028_clear_interrupts();
 
     // Set TRPT bit to reload interrupt and set timer clock to 1/60hz
-    set_bits(CONTROL_1_REG, ((1 << 7) | 0x03));
+    set_bits(CONTROL_1_REG, ((1 << 7) | 0x03)); //0x03 for 1/60, 0x02 for 1hz
 
     // Work out period
     // Timer Value 0 is low reg.
