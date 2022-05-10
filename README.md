@@ -46,7 +46,7 @@ git clone https://github.com/matty0005/lorawan_battey_monitor_software
 cd lorawan_battey_monitor_software
 docker-compose up -d
 ```
-
+More instructions at: https://github.com/matty0005/lorawan_battey_monitor_software
 
 ## Cloning 
 ```
