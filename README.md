@@ -1,6 +1,7 @@
 # pico-LoRaWAN-battery-monitor
 A raspberry pi pico based lorawan enabled battery monitor
 
+Based off the pico-lorawan library: https://github.com/ArmDeveloperEcosystem/lorawan-library-for-pico
 
 ### Default Pinout for RFM95
 
