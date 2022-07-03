@@ -218,7 +218,9 @@ int main( void ) {
         lorawan_process();
     }
 
-    lorawan_process_timeout_ms(30000);
+
+    // Can be configured
+    lorawan_process_timeout_ms(conf.process_timeout * 1000);
 
     // Turn off device to conserve power
     unlatch_power();

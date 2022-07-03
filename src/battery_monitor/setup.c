@@ -186,6 +186,20 @@ void configure_frequency(BatteryMonitConfig *bmc) {
     set_periodic_interrupt(bmc->measure_period);
 }
 
+void configure_process_timeout(BatteryMonitConfig *bmc) {
+    char period[4];
+
+    printf("Current timout period: %d seconds\n", bmc->process_timeout);
+
+    configure_string("Please enter the desired processing period in seconds", period, 4);
+
+    char *end;
+    // Convert string to uint16_t
+    bmc->process_timeout = strtol(period, &end, 10);
+    printf("Setting time to be %d seconds\n", bmc->process_timeout);
+
+}
+
 void configure_datetime() {
     char year[4], month[2], day[2], hour[2], mins[2];
 
@@ -218,11 +232,12 @@ void restore_config_from_flash(BatteryMonitConfig *bmc) {
 
     bmc->adcs_in_use = flash_target_contents[1];
     bmc->measure_period = (flash_target_contents[2] << 8) | flash_target_contents[3];
-    bmc->region = flash_target_contents[4];
+    bmc->process_timeout = (flash_target_contents[4] << 8) | flash_target_contents[5];
+    bmc->region = flash_target_contents[6];
 
 
-    memcpy(bmc->app_eui, (flash_target_contents + 5), 16);
-    memcpy(bmc->app_key, (flash_target_contents + 23), 32);
+    memcpy(bmc->app_eui, (flash_target_contents + 7), 16);
+    memcpy(bmc->app_key, (flash_target_contents + 25), 32);
 
     printf("Saved app eui: %.16s\n", bmc->app_eui);
     printf("Saved app key: %.32s\n",bmc->app_key);
@@ -249,11 +264,13 @@ void flash_write_config(BatteryMonitConfig *bmc) {
     data_to_store[1] = bmc->adcs_in_use;
     data_to_store[2] = (bmc->measure_period >> 8) & 0xFF;
     data_to_store[3] = bmc->measure_period & 0xFF;
-    data_to_store[4] = bmc->region;
+    data_to_store[4] = (bmc->process_timeout >> 8) & 0xFF;
+    data_to_store[5] = bmc->process_timeout & 0xFF;
+    data_to_store[6] = bmc->region;
 
     // Copy over the app_eui and app_key
-    memcpy((data_to_store + 5), bmc->app_eui, 16);
-    memcpy((data_to_store + 23), bmc->app_key, 32);
+    memcpy((data_to_store + 7), bmc->app_eui, 16);
+    memcpy((data_to_store + 25), bmc->app_key, 32);
 
     // Note that a whole number of sectors must be erased at a time.
     printf("\nErasing target region...\n");
@@ -317,7 +334,8 @@ void setup_config(BatteryMonitConfig *bmc) {
         "    [2] APP Key\n" \
         "    [3] Pin's to measure\n" \
         "    [4] Frequency of measurement\n" \
-        "    [5] Set date and time\n" \
+        "    [5] Process timeout\n" \
+        "    [6] Set date and time\n" \
         "Press q to quit, or enter selection:");
 
         char option = get_keypress();
@@ -341,6 +359,9 @@ void setup_config(BatteryMonitConfig *bmc) {
                 configure_frequency(bmc);
                 break;
             case '5':
+                configure_process_timeout(bmc);
+                break;
+            case '6':
                 configure_datetime();
                 break;
             case 'c':
@@ -353,11 +374,7 @@ void setup_config(BatteryMonitConfig *bmc) {
         }
     }
 
-
     // Save config to flash
     flash_write_config(bmc); 
     printf("\nYour settings have been saved. Please remove the config wire and restart device.\n");
-    
-
-
 }

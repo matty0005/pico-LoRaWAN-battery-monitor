@@ -14,6 +14,7 @@ typedef struct {
     LoRaMacRegion_t region;
     uint8_t adcs_in_use;
     uint16_t measure_period;
+    uint16_t process_timeout;
 } BatteryMonitConfig;
 
 
