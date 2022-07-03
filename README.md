@@ -1,6 +1,7 @@
 # pico-LoRaWAN-battery-monitor
 A raspberry pi pico based lorawan enabled battery monitor
 
+Based off the pico-lorawan library: https://github.com/ArmDeveloperEcosystem/lorawan-library-for-pico
 
 ### Default Pinout for RFM95
 
@@ -39,8 +40,14 @@ A raspberry pi pico based lorawan enabled battery monitor
 | GPIO 29 (A3) | Voltage 4 |
 | GPIO 6  | Measure enable |
 
-
-
+## Software
+Once you have installed the latest version of docker, run the following command in a suitable directory
+```
+git clone https://github.com/matty0005/lorawan_battey_monitor_software
+cd lorawan_battey_monitor_software
+docker-compose up -d
+```
+More instructions at: https://github.com/matty0005/lorawan_battey_monitor_software
 
 ## Cloning 
 ```
