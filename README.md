@@ -1,7 +1,16 @@
 # pico-LoRaWAN-battery-monitor
 A raspberry pi pico based lorawan enabled battery monitor
 
-Based off the pico-lorawan library: https://github.com/ArmDeveloperEcosystem/lorawan-library-for-pico
+## DIYODE Magazine article writeup
+This is the codebase for the article I wrote in issue 61.
+
+[Part 1 - Issue 61](https://diyodemag.com/projects/raspberry_pi_feather_rp2040_lorawan_battery_monitor_part_1)
+
+Part 2 coming soon
+
+
+# Device
+
 
 ### Default Pinout for RFM95
 
@@ -65,3 +74,7 @@ cmake .. -DPICO_BOARD=pico
 make -j
 ```
 Then you can find the .uf2 file in the build folder and drag it over to your pi pico.
+
+### Notes
+Based off the pico-lorawan library: https://github.com/ArmDeveloperEcosystem/lorawan-library-for-pico
+
