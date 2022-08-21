@@ -9,8 +9,12 @@ This is the codebase for the article I wrote in issue 61.
 Part 2 coming soon
 
 
+
 # Device
 
+
+## Schematic 
+<img alt="image" src="https://cdn.mattgilpin.au/images/github/lorawan_battery_monitor_schematic.png">
 
 ### Default Pinout for RFM95
 
