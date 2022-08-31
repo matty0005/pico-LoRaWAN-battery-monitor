@@ -6,7 +6,7 @@ This is the codebase for the article I wrote in issue 61.
 
 [Part 1 - Issue 61](https://diyodemag.com/projects/raspberry_pi_feather_rp2040_lorawan_battery_monitor_part_1)
 
-Part 2 coming soon
+[Part 2 - Issue 62](https://diyodemag.com/projects/raspberry_pi_feather_rp2040_lorawan_battery_monitor_part_2)
 
 
 
